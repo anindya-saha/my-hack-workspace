@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ManyScale - Hackathon 2025</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 450px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            border: 4px solid #2a5298;
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            animation: pulse 3s infinite;
+            object-fit: cover;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        h1 {
+            color: #1e3c72;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .welcome-text {
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        /* Hide the password field */
+        input[type="password"] {
+            display: none;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(42, 82, 152, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .info-box {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            text-align: left;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .info-icon {
+            margin-right: 10px;
+            font-size: 16px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .loading {
+            display: none;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #2a5298;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .logo-text {
+            display: inline-block;
+            background: linear-gradient(135deg, #2a5298, #1e3c72);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="/static/Anindya-Cartoon.jpg" alt="Profile" class="profile-pic">
+        <h1><span class="logo-text">ManyScale</span></h1>
+        <p class="subtitle">Ray Cluster Development Environment</p>
+        <p class="welcome-text">Welcome to the Hackathon 2025 workspace!</p>
+        
+        <form method="post" action="{{LOGIN_BASE_PATH}}/login" onsubmit="showLoading()">
+            <!-- Hidden password field with a fixed value -->
+            <input type="password" name="password" value="welcome" />
+            
+            <button type="submit" id="submitBtn">Launch ManyScale Environment</button>
+            
+            <div class="loading" id="loading">
+                <span class="spinner"></span>
+                Launching ManyScale...
+            </div>
+        </form>
+        
+        <div class="info-box">
+            <div class="info-title">ManyScale Features</div>
+            <div class="info-item">
+                <span class="info-icon">🚀</span>
+                <span>Distributed Ray Computing</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">🐍</span>
+                <span>Python 3.12 + Ray 2.44.1</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">🖥️</span>
+                <span>GPU-enabled compute nodes</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">💾</span>
+                <span>Shared FSx storage at /fsx</span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">📊</span>
+                <span>Pre-installed ML libraries</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            ManyScale - Hackathon 2025 | Powered by Ray + VS Code
+        </div>
+    </div>
+    
+    <script>
+        function showLoading() {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Launching...';
+            document.getElementById('loading').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
+
+

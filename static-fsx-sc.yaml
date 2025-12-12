@@ -1,0 +1,9 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: static-fsx-sc
+provisioner: fsx.csi.aws.com
+parameters:
+  fileSystemId: <FSX_FILE_SYSTEM_ID> # Replace with your FSx file system ID
+  subnetId: <SUBNET_ID>  # Replace with your subnet ID
+  securityGroupIds: <SECURITY_GROUP_ID>  # Replace with your security group ID

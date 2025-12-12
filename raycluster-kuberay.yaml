@@ -1,0 +1,157 @@
+apiVersion: ray.io/v1alpha1
+kind: RayCluster
+metadata:
+  name: raycluster-kuberay
+  labels:
+    controller-tools.k8s.io: "1.0"
+spec:
+  # Ray head pod template
+  headGroupSpec:
+    # The `rayStartParams` are used to configure the `ray start` command.
+    # See https://github.com/ray-project/kuberay/blob/master/docs/guidance/rayStartParams.md for the default settings of `rayStartParams` in KubeRay.
+    # See https://docs.ray.io/en/latest/cluster/cli.html#ray-start for all available options in `rayStartParams`.
+    rayStartParams:
+      dashboard-host: '0.0.0.0'
+      num-gpus: "0"
+      num-cpus: "0"
+    #pod template
+    template:
+      metadata:
+        annotations: {}
+        labels:
+          ray.io/identifier: raycluster-kuberay-head
+      spec:
+        nodeSelector:  
+          node.kubernetes.io/instance-type: "ml.m5.12xlarge"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
+        containers:
+        - name: ray-head
+          image: <YOUR_ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/mlp/ray-gpu:0.0.2     ## IMAGE: Here you may choose which image your head pod will run
+          env:                                        ## ENV: Here is where you can send stuff to the head pod
+            - name: RAY_GRAFANA_IFRAME_HOST           ## PROMETHEUS AND GRAFANA
+              value: http://localhost:3000
+            - name: RAY_GRAFANA_HOST
+              value: http://prometheus-grafana.prometheus-system.svc:80
+            - name: RAY_PROMETHEUS_HOST
+              value: http://prometheus-kube-prometheus-prometheus.prometheus-system.svc:9090
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","ray stop"]
+          resources:
+            limits:                                    ## LIMITS: Set resource limits for your head pod
+              cpu: 2
+              memory: 8Gi
+            requests:                                  ## REQUESTS: Set resource requests for your head pod
+              cpu: 2
+              memory: 8Gi
+          ports:
+          - containerPort: 6379
+            name: gcs-server
+          - containerPort: 8265 # Ray dashboard
+            name: dashboard
+          - containerPort: 10001
+            name: client
+          - containerPort: 8000
+            name: serve
+          volumeMounts:                                 ## VOLUMEMOUNTS
+          - name: fsx-storage
+            mountPath: /fsx
+          - name: ray-logs
+            mountPath: /tmp/ray
+        volumes:
+          - name: ray-logs
+            emptyDir: {}
+          - name: fsx-storage
+            persistentVolumeClaim:
+              claimName: static-fsx-pvc
+  workerGroupSpecs:
+  # the pod replicas in this group typed worker
+  - replicas: 2                                    ## REPLICAS: How many worker pods you want 
+    minReplicas: 1
+    maxReplicas: 4
+    # logical group name, for this called small-group, also can be functional
+    groupName: acc-worker-group-1
+    rayStartParams:
+      num-gpus: "4"
+    #pod template
+    template:
+      spec:
+        nodeSelector:
+          node.kubernetes.io/instance-type: "ml.g5.12xlarge"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
+        containers:
+        - name: ray-worker
+          image: <YOUR_ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/mlp/ray-gpu:0.0.2             ## IMAGE: Here you may choose which image your head node will run
+          env:
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","ray stop"]
+          resources:
+            limits:                                    ## LIMITS: Set resource limits for your worker pods
+              nvidia.com/gpu: 4
+              #vpc.amazonaws.com/efa: 1  
+            requests:                                    ## REQUESTS: Set resource requests for your worker pods
+              nvidia.com/gpu: 4
+              #vpc.amazonaws.com/efa: 1
+          volumeMounts:                                    ## VOLUMEMOUNTS
+          - name: ray-logs
+            mountPath: /tmp/ray
+          - name: fsx-storage
+            mountPath: /fsx
+        volumes:
+        - name: fsx-storage
+          persistentVolumeClaim:
+            claimName: static-fsx-pvc
+        - name: ray-logs
+          emptyDir: {}
+  # the pod replicas in this group typed worker
+  - replicas: 2                                    ## REPLICAS: How many worker pods you want 
+    minReplicas: 1
+    maxReplicas: 2
+    # logical group name, for this called small-group, also can be functional
+    groupName: acc-worker-group-2
+    rayStartParams:
+      num-gpus: "8"
+    #pod template
+    template:
+      spec:
+        nodeSelector:
+          node.kubernetes.io/instance-type: "ml.p4d.24xlarge"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
+        containers:
+        - name: ray-worker
+          image: <YOUR_ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/mlp/ray-gpu:0.0.2             ## IMAGE: Here you may choose which image your head node will run
+          env:
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","ray stop"]
+          resources:
+            limits:                                    ## LIMITS: Set resource limits for your worker pods
+              nvidia.com/gpu: 8
+              #vpc.amazonaws.com/efa: 4  
+            requests:                                    ## REQUESTS: Set resource requests for your worker pods
+              nvidia.com/gpu: 8
+              #vpc.amazonaws.com/efa: 4
+          volumeMounts:                                    ## VOLUMEMOUNTS
+          - name: ray-logs
+            mountPath: /tmp/ray
+          - name: fsx-storage
+            mountPath: /fsx
+        volumes:
+        - name: fsx-storage
+          persistentVolumeClaim:
+            claimName: static-fsx-pvc
+        - name: ray-logs
+          emptyDir: {}

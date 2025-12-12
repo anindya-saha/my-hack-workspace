@@ -1,0 +1,62 @@
+FROM python:3.12-slim
+
+# Install code-server and dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install code-server
+RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+# Create coder user
+RUN useradd -m -s /bin/bash coder && \
+    echo "coder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/coder
+
+# Install Python packages
+RUN pip install --no-cache-dir \
+    'ray[client]==2.44.1' \
+    'numpy>=1.20' \
+    'pandas>=1.3' \
+    'matplotlib>=3.3' \
+    'jupyter>=1.0' \
+    'ipykernel>=6.0' \
+    'protobuf<4'
+
+# # Copy custom login page
+# COPY custom-login-simple.html /tmp/custom-login.html
+
+# # Find and replace the default login page
+# RUN mkdir -p /usr/lib/code-server/src/browser/pages && \
+#     cp /tmp/custom-login.html /usr/lib/code-server/src/browser/pages/login.html || \
+#     (find /usr/lib/code-server -name "login.html" -type f -exec cp /tmp/custom-login.html {} \; 2>/dev/null || true) && \
+#     rm /tmp/custom-login.html
+
+# Install VS Code extensions as coder user
+USER coder
+RUN code-server --install-extension ms-python.python \
+    --install-extension ms-toolsai.jupyter
+
+WORKDIR /home/coder
+
+# Create connection script
+# RUN echo '#!/usr/bin/env python3\n\
+# import ray\n\
+# \n\
+# def connect_to_ray():\n\
+#     try:\n\
+#         ray.init("ray://localhost:10001")\n\
+#         print("Connected to Ray cluster!")\n\
+#         print(f"Available resources: {ray.available_resources()}")\n\
+#     except Exception as e:\n\
+#         print(f"Failed to connect to Ray cluster: {e}")\n\
+#         print("You can still use Ray in local mode")\n\
+# \n\
+# if __name__ == "__main__":\n\
+#     connect_to_ray()' > /home/coder/connect_to_ray.py && \
+#     chmod +x /home/coder/connect_to_ray.py
+
+EXPOSE 8080
+
+CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "password"]
